@@ -1,0 +1,18 @@
+<%- include('partials/top') -%>
+
+  <h1 style="text-align: center"class="text-4xl mb-4">Servers for <%= user.nickname %>: </h1>
+  
+<br><br><br><br>
+<% if(user.email_verified){ %>
+  <p style="text-align:center">Work in process</p>
+  <br><br><br><br><br><br><br><br><br><br><br>
+
+  <% } else { %>
+    <p style="text-align:center">Please verify your email before you begin!<p>
+      <br><br><br><br><br><br><br><br><br><br><br>
+      <% } %>
+
+  
+
+<%- include('partials/style') -%>
+  <%- include('partials/footer') -%>
