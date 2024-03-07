@@ -1,0 +1,86 @@
+<%- include ('partials/top') -%>
+
+<h1><%= title %></h1>
+
+<div class="product-container">
+  <% items.forEach(item => { %>
+    <div class="product">
+      <div class="product-image">
+        <img src="<%= item.image %>" alt="<%= item.name %>">
+      </div>
+      <div class="product-details">
+        <h2><%= item.name %></h2>
+        <p style="    -webkit-text-stroke-width: 0.01px;    color:#007bff;    ">Price: $<%= item.price %></p>
+        <!-- Add to Cart button with data attributes -->
+        <button onclick="addToCart('<%= item.name %>', '<%= item.price %>', '<%= item.image %>')" style="color:rgb(0, 0, 0); background-color: rgb(255, 255, 255); -webkit-text-stroke-width: 0.0px; padding: 10px; font-weight: bold; box-shadow: 0 0 10px rgb(0, 0, 0);" class="add-to-cart" data-name="<%= item.name %>" data-price="<%= item.price %>" data-image="<%= item.image %>">
+
+          Add to Cart
+        </button>
+      </div>
+    </div>
+  <% }); %>
+</div>
+
+<%- include ('partials/style') -%>
+<%- include ('partials/footer') -%>
+
+<script>
+  // Function to add items to the cart and store them in local storage
+  function addToCart(name, price, image) {
+  const item = {
+    name: name,
+    price: price,
+    image: image
+  };
+
+  const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+  cartItems.push(item);
+  localStorage.setItem('cartItems', JSON.stringify(cartItems));
+
+  // Redirect to the cart page with a success alert
+  window.location.href = '/cart?alert=success';
+}
+
+</script>
+
+<style>
+  /* public/style.css */
+
+  .product-container {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .product {
+    align-items: center;
+    text-align: center;
+    width: 400px;
+    height: 400px;
+    margin: 10px;
+    overflow: hidden;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+  }
+
+  .product-image {
+    width: 100%;
+    zoom: inherit;
+    object-fit: cover;
+    height: 150px; /* Set a fixed height for consistent sizing */
+    object-fit: contain; /* Center the image within the container */
+    border-radius: 15px 15px 0 0; /* Rounded corners for the top */
+  }
+
+  .product-details {
+    text-align: center;
+    color: #000000;
+    -webkit-text-stroke: #ffffff;
+    -webkit-text-stroke-width: 0.5px;
+    box-shadow: 0 0 20px black;
+    padding: 10px;
+  }
+
+  
+
+
+</style>

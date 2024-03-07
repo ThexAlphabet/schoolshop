@@ -1,0 +1,52 @@
+<%- include('partials/top') -%>
+<title>Home | SchoolShop</title>
+
+      <div class="header">
+        <h1>Affordable  & Reliable School Shop System!</h1>
+        <p>Multiple products to fit your needs!</p><br>
+        <% if (locals.user) { %>
+        <a href="/cart"><i class="fa-solid fa-plane"></i> Shop now!</a>
+          <% } else { %>
+          <a href="/login"><i class="fa-solid fa-plane"></i> Shop now!</a>
+            <% } %>
+              </div>
+      </div> <br><br><br>
+    </div>
+    <div class="wehave">
+      <h1>We Have</h1>
+      <div class="attributes">
+       
+        <div class="attribute">
+          <i class="fa-solid fa-phone"></i>
+          <h3 class="name">Support</h3>
+          <p class="desc">We have support professionals available 24 hours a day, 7 days a week to ensure you get an answer to your query whenever you need it!
+  </p>
+        </div>
+        <div class="attribute">
+          <i class="fa-solid fa-gauge"></i>
+          <h3 class="name">Fast Setup</h3>
+          <p class="desc">After payment is confirmed and the order is processed, your order will be instantly configured, and served.
+  </p>
+        </div>
+        <div class="attribute">
+          <i class="fa-solid fa-server"></i>
+          <h3 class="name">Hacker Protection</h3>
+          <p class="desc">Our servers are equipped with the best protection to prevent, hacks from buying stuff on your accounts!</p>
+        </div>
+        <div class="attribute">
+          <i class="fa-solid fa-earth-americas"></i>
+          <h3 class="name">99% Success</h3>
+          <p class="desc">We promise 99% successful transactions across all of our services.</p>
+        </div>
+        <div class="attribute">
+          <i class="fa-solid fa-money-check-dollar"></i>
+          <h3 class="name">Affordable</h3>
+          <p class="desc">Our prices are reasonable for individuals, businesses, and people from all over the world! There are no hidden costs.</p>
+        </div>
+      </div>
+    
+    
+    
+
+              <%- include('partials/style') -%>
+                <%- include('partials/footer') -%>

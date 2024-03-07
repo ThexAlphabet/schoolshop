@@ -1,0 +1,13 @@
+<%- include('partials/top') -%>
+<title>Error | SchoolShop</title>
+
+  <%- include('partials/style') -%>
+  <h1 style="text-align: center; color: red"class="text-4xl">💣 <%= error.status || "ERROR" %>: <%= message || "Error" %></h1>
+  <% if(locals.user){ %>
+  <p style="text-align: center; color: rgb(255, 255, 255)"class="text-4xl"> Please return to home <%= user.given_name %>!</p>
+<% } else { %>
+  <p style="text-align: center; color: rgb(255, 255, 255)"class="text-4xl"> Please return to home!</p>
+<% } %>
+
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+<%- include('partials/footer') -%>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Product Form</title>
+</head>
+<body>
+
+  <h1>Add Product</h1>
+  
+  <form id="productForm">
+    <label for="productName">Product Name:</label>
+    <input type="text" id="productName" name="productName" required>
+  
+    <label for="productPrice">Product Price:</label>
+    <input type="number" id="productPrice" name="productPrice" required>
+  
+    <label for="productImage">Product Image URL:</label>
+    <input type="url" id="productImage" name="productImage" required>
+  
+    <button type="submit">Add Product</button>
+  </form>
+  
+  <script>
+    document.getElementById('productForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+  
+      const productName = document.getElementById('productName').value;
+      const productPrice = document.getElementById('productPrice').value;
+      const productImage = document.getElementById('productImage').value;
+  
+      // Replace the placeholder with the actual URL of your server
+      const serverUrl = 'http://localhost:3000'; // Update with your server URL
+      const addProductUrl = `${serverUrl}/addProduct`;
+  
+      // Send a POST request to the /addProduct route
+      fetch(addProductUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: productName, price: productPrice, image: productImage }),
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to add product. Status: ${response.status}`);
+          }
+          console.log('Product added successfully.');
+        })
+        .catch(error => {
+          console.error('Error adding product:', error.message);
+        });
+    });
+  </script>
+  
