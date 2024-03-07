@@ -1,0 +1,274 @@
+
+
+<!-- Your Cart Page (cart.ejs) -->
+<%- include('partials/top') -%>
+<title>Cart | SchoolShop</title>
+
+
+<style>
+  /* Pa
+  
+  
+  ste the provided CSS styles here */
+
+  .total-price {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+   /* Center the button */
+   #cart-container button {
+    margin: 20px auto;
+    display: block;
+  }
+
+  /* Additional styles for cart page */
+  #cart-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 20px auto;
+  }
+
+  .cart-list {
+    width: 100%;
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around; /* Adjust as needed */
+  }
+
+  .cart-item {
+    width: 30%; /* Adjust width as needed */
+    color:black;
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    margin: 10px;
+    text-align: center;
+    padding: 15px;
+  }
+
+  .product-image {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+  }
+
+  .product-image img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+  }
+
+  .product-details {
+    margin-top: 10px;
+  }
+
+  .product-details p {
+    margin: 0;
+  }
+
+  .cart-empty {
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+    color: #555;
+  }
+
+  .total-price {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+</style>
+
+<%- include('partials/style') -%>
+
+<h1>Your Cart</h1>
+<div style="right: 50%; font-weight: bold; text-align: center;" id="total-price"></div>
+<br>
+<div style="text-align: center;" id="btn1">
+  <form id="checkoutForm" action="/checkout" method="post">
+    <input type="hidden" name="auth0SessionId" value="<%= user.sid %>">
+    <input type="hidden" name="userEmail" value="<%= user.email %>">
+    <!-- Add hidden input fields for each cart item -->
+    <% for (let i = 0; i < cartItems.length; i++) { %>
+      <input type="hidden" name="cartItems[<%= i %>][name]" value="<%= cartItems[i].name %>">
+      <input type="hidden" name="cartItems[<%= i %>][price]" value="<%= cartItems[i].price %>">
+      <input type="hidden" name="cartItems[<%= i %>][image]" value="<%= cartItems[i].image %>">
+      <input type="hidden" name="cartItems[<%= i %>][quantity]" value="<%= cartItems[i].quantity %>">
+    <% } %>
+    <button style="background-color: greenyellow; border-radius: 5px; text-align: center; align-items: center; font-weight: bold; color: black; left: 50px;" type="submit">Proceed to Checkout</button>
+  </form>
+</div>
+<div id="cart-container">
+  <ul class="cart-list" id="cart-list">
+    <!-- Cart items will be dynamically added here -->
+  </ul>
+</div>
+
+<%- include('partials/footer') -%>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  function addToCart(name, price, image) {
+    const item = {
+      name: name,
+      price: price,
+      image: image
+    };
+
+    // Get Auth0 session ID
+    const auth0SessionId = '<%= user.sid %>';
+
+    // Get existing cart items from local storage using Auth0 session ID
+    let cartItems = JSON.parse(localStorage.getItem(`cartItems_${auth0SessionId}`)) || [];
+
+    // Check if the item is already in the cart
+    const existingItemIndex = cartItems.findIndex(i => i.name === item.name);
+
+    if (existingItemIndex !== -1) {
+      // If the item is already in the cart, increase the quantity
+      cartItems[existingItemIndex].quantity += 1;
+    } else {
+      // If the item is not in the cart, add it with a quantity of 1
+      item.quantity = 1;
+      cartItems.push(item);
+    }
+
+    // Update local storage with the updated cart using Auth0 session ID
+    localStorage.setItem(`cartItems_${auth0SessionId}`, JSON.stringify(cartItems));
+
+    // Alert the user about the successful addition
+    alert('Item successfully added to the cart!');
+    renderCartItems(); // Update cart items on the page
+  }
+
+  function calculateTotalPrice() {
+    const cartItems = getCartItems();
+    let totalPrice = 0;
+
+    cartItems.forEach(item => {
+      totalPrice += item.price * item.quantity;
+    });
+
+    return totalPrice;
+  }
+
+  function checkout() {
+    const auth0SessionId = '<%= user.sid %>';
+    const userEmail = '<%= user.email %>';
+    const cartItems = getCartItems();
+    const totalPrice = calculateTotalPrice();
+
+    // Send data to the server
+    axios.post('/checkout', {
+      auth0SessionId,
+      userEmail,
+      cartItems
+    })
+    .then(response => {
+      alert('Checkout successful!');
+      // Additional client-side logic if needed
+    })
+    .catch(error => {
+      console.error('Error during checkout:', error.message);
+      // Additional error handling if needed
+    });
+  }
+
+  function updateButtonVisibility() {
+    const checkoutButton = document.getElementById('btn1'); // Corrected ID
+    const cartItems = getCartItems();
+
+    // Show the button if there are items, hide it otherwise
+    checkoutButton.style.display = cartItems.length > 0 ? 'block' : 'none';
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    renderCartItems();
+    updateButtonVisibility();
+  });
+
+  function getCartItems() {
+    // Get Auth0 session ID
+    const auth0SessionId = '<%= user.sid %>';
+
+    // Get cart items from local storage using Auth0 session ID
+    return JSON.parse(localStorage.getItem(`cartItems_${auth0SessionId}`)) || [];
+  }
+
+  function removeItem(name) {
+    // Get Auth0 session ID
+    const auth0SessionId = '<%= user.sid %>';
+
+    // Get existing cart items from local storage using Auth0 session ID
+    let cartItems = JSON.parse(localStorage.getItem(`cartItems_${auth0SessionId}`)) || [];
+
+    // Remove one quantity of the item from the cart
+    const existingItemIndex = cartItems.findIndex(i => i.name === name);
+
+    if (existingItemIndex !== -1) {
+      if (cartItems[existingItemIndex].quantity > 1) {
+        // If the quantity is more than 1, decrease the quantity
+        cartItems[existingItemIndex].quantity -= 1;
+      } else {
+        // If the quantity is 1, remove the entire item from the cart
+        cartItems.splice(existingItemIndex, 1);
+      }
+    }
+
+    // Update local storage with the updated cart using Auth0 session ID
+    localStorage.setItem(`cartItems_${auth0SessionId}`, JSON.stringify(cartItems));
+
+    // Re-render the cart items on the page
+    renderCartItems();
+  }
+
+  function renderCartItems() {
+    const cartItems = getCartItems();
+    const cartList = document.getElementById('cart-list');
+    const totalPriceElement = document.getElementById('total-price');
+    const buttonElement = document.getElementById('btn1');
+
+    cartList.innerHTML = '';
+
+    if (cartItems.length > 0) {
+      let totalPrice = 0;
+
+      cartItems.forEach(item => {
+        const cartItem = document.createElement('li');
+        cartItem.classList.add('cart-item');
+
+        totalPrice += item.price * item.quantity;
+
+        cartItem.innerHTML = `
+          <img src="${item.image}" alt="${item.name}" class="product-image">
+          <div class="product-details">
+            <p><strong>${item.name}</strong></p>
+            <p>Price: $${item.price}</p>
+            <p>Quantity: ${item.quantity}</p>
+            <button onclick="removeItem('${item.name}')">Remove One</button>
+          </div>
+        `;
+
+        cartList.appendChild(cartItem);
+      });
+
+      // Display the total price
+      totalPriceElement.textContent = `Total Price: $${totalPrice.toFixed(2)}`;
+    } else {
+      const emptyCartMessage = document.createElement('p');
+      emptyCartMessage.classList.add('cart-empty');
+      emptyCartMessage.textContent = 'Your cart is empty.';
+      cartList.appendChild(emptyCartMessage);
+
+      // Hide the total price when the cart is empty
+      totalPriceElement.textContent = '';
+      buttonElement.textContent = '';
+    }
+  }
+</script>
