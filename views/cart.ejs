@@ -1,0 +1,45 @@
+<%- include('partials/top') -%>
+<title>Cart | SchoolShop</title>
+
+<%- include('partials/style') -%>
+
+<h1>Your Cart</h1>
+<% if (cartItems.length > 0) { %>
+  <ul class="cart-list">
+    <% cartItems.forEach(item => { %>
+      <li class="cart-item">
+        <img src="<%= item.image %>" alt="<%= item.name %>" class="product-image">
+        <div class="product-details">
+          <p><strong><%= item.name %></strong></p>
+          <p>Price: $<%= item.price %></p>
+          <button onclick="removeItem('<%= item.name %>')">Remove</button>
+        </div>
+      </li>
+    <% }) %>
+  </ul>
+  <form action="/checkout" method="post">
+    <button type="submit">Proceed to Checkout</button>
+  </form>
+<% } else { %>
+  <p>Your cart is empty.</p>
+<% } %>
+
+<script>
+  function removeItem(itemName) {
+    // Implement logic to remove item from cart
+    // You may use JavaScript to send a request to the server to update the cart
+  }
+  
+  // Check if the alert parameter is present in the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const alertParam = urlParams.get('alert');
+
+  // Display an alert based on the alert parameter
+  if (alertParam === 'success') {
+    alert('Item successfully added to the cart!');
+  } else if (alertParam === 'error') {
+    alert('Error adding item to the cart. Please try again.');
+  }
+</script>
+
+<%- include('partials/footer') -%>
