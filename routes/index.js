@@ -2,7 +2,9 @@
 
 const LocalStorage = require('node-localstorage').LocalStorage;
 const localStorage = new LocalStorage('./scratch');
+const fs = require('fs').promises;
 const axios = require('axios');
+const path = require('path');
 
 const router = require('express').Router();
 const { requiresAuth } = require('express-openid-connect');
@@ -32,10 +34,6 @@ router.post('/auth/get', async (req, res) => {
 
     await createOrUpdateUser(sid, email, nickname);
 
-    const discordWebhookURL = process.env.DISCORD_WEBHOOK_URL; // Replace with your environment variable
-    const message = `New user authenticated!\nEmail: ${email}\nNickname: ${nickname}\nSID: ${sid}`;
-    await sendToDiscordWebhook(discordWebhookURL, message);
-
     res.status(200).json({ message: 'Data received and user saved successfully' });
   } catch (error) {
     console.error(error);
@@ -43,23 +41,10 @@ router.post('/auth/get', async (req, res) => {
   }
 });
 
-router.get('/add', (req, res) => {
-  res.render('add', { cartItems: req.session.cartItems || [] });
-});
-
-
-router.get('/error', function (req, res, next) {
-  res.render('error', {
-    title: 'Error | SchoolShop',
-    userProfile: JSON.stringify(req.oidc.user, null, 2),
-    isAuthenticated: req.oidc.isAuthenticated(),
-  });
-});
-
 router.get('/items', requiresAuth(), (req, res) => {
   const items = [
     { name: 'Arizona Ice Tea', price: 2, image: 'https://www.dollartree.com/ccstore/v1/images/?source=/file/v2989681447849503788/products/284226.jpg' },
-    { name: 'hand gripper', price: 7, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/933c1c62ffbe97aea79e381f8aff701e.jpg?imageView2/2/w/800/q/70/format/webp' },
+    { name: 'Hand Gripper', price: 7, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/933c1c62ffbe97aea79e381f8aff701e.jpg?imageView2/2/w/800/q/70/format/webp' },
     { name: 'Sour Patch', price: 2, image: 'https://i5.walmartimages.com/seo/SOUR-PATCH-KIDS-Original-Soft-Chewy-Candy-Valentine-Candy-3-5-oz-Box_88eab23e-ad94-4604-8f52-1229e97a9436.5b52785d32431171e597ab744f504c9d.jpeg?odnHeight=640&odnWidth=640&odnBg=FFFFFF: ' },
     { name: 'Hair Styling Powder', price: 8 , image: 'https://img.kwcdn.com/product/fancy/4af8433c-7284-411a-8726-c3edac84141b.jpg?imageView2/2/w/800/q/70/format/webp: ' },
     { name: 'Push Game', price: 6, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/66e7b2461c9a5648670c7866109c40e7.jpg?imageView2/2/w/800/q/70/format/webp: ' },
@@ -72,9 +57,9 @@ router.get('/items', requiresAuth(), (req, res) => {
     { name: 'Rings', price: 1,image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/d663dd745cc1fe15a7c211771d8bf19b.jpg?imageView2/2/w/800/q/70/format/webp: ' },
     { name: 'Rubber Band Gun', price: 5, image: 'https://img.kwcdn.com/product/open/2023-03-22/1679482441399-deb172f9491d41fdbccd1e9c70e6820f-goods.jpeg?imageView2/2/w/800/q/70/format/webp: ' },
     { name: 'Monkey', price: 10, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/5d372bce49a73b3963c1027e543cb263.jpg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Car Stickers 10 for 2$', price: 2, image: 'https://img.kwcdn.com/product/open/2023-11-13/1699861590301-19b32e97d85d4dba91372946bbfa4051-goods.jpeg?imageView2/2/w/800/q/70/format/webp: ' },
-  // Add more items as needed
-  ]
+    { name: 'Car Stickers 10 for 2$', price: 2, image: 'https://img.kwcdn.com/product/open/2023-11-13/1699861590301-19b32e97d85d4dba91372946bbfa4051-goods.jpeg?imageView2/2/w/800/q/70/format/webp: ' },  
+ // add more if needed
+  ];
   res.render('items', {
     userProfile: JSON.stringify(req.oidc.user, null, 2),
     title: 'Cart | SchoolShop',
@@ -89,45 +74,30 @@ router.get('/order', requiresAuth(), function (req, res, next) {
   });
 });
 
-router.get('/cart', requiresAuth(), function (req, res, next) {
-  res.render('cart', {
-    userProfile: JSON.stringify(req.oidc.user, null, 2),
-    title: 'Cart | SchoolShop',
-    cartItems: req.session.cartItems || [],
-  });
-});
+// routes.js
+
+// ...
 
 
 
-router.post('/addToCart', requiresAuth(), (req, res) => {
+// ...
+
+
+router.get('/api/cart', requiresAuth(), async (req, res) => {
   try {
     const auth0SessionId = req.oidc.user.sub;
 
-    const item = {
-      name: req.body.name,
-      price: req.body.price,
-      image: req.body.image,
-    };
+    // Fetch cart items from the database
+    const cartItems = await fetchCartItemsFromDatabase(auth0SessionId);
 
-    let cartItems = JSON.parse(localStorage.getItem(`cartItems_${auth0SessionId}`)) || [];
-
-    const existingItemIndex = cartItems.findIndex(i => i.name === item.name);
-
-    if (existingItemIndex !== -1) {
-      cartItems[existingItemIndex].quantity += 1;
-    } else {
-      item.quantity = 1;
-      cartItems.push(item);
-    }
-
-    localStorage.setItem(`cartItems_${auth0SessionId}`, JSON.stringify(cartItems));
-
-    res.redirect('/');
+    res.status(200).json({ cartItems });
   } catch (error) {
-    console.error('Error adding item to cart:', error);
+    console.error('Error fetching cart items from the database:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
 
 router.post('/checkout', async (req, res) => {
   try {
@@ -135,8 +105,15 @@ router.post('/checkout', async (req, res) => {
     const userEmail = req.oidc.user.email;
     const cartItems = getCartItemsFromLocalStorage(auth0SessionId);
 
-    await sendToDiscordWebhook(cartItems, auth0SessionId, userEmail);
+    // Check if there are cart items to process
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(400).json({ error: 'No items in the cart' });
+    }
 
+    // Save cart items to a JSON file
+    await saveCartItemsToJson({ cartItems, auth0SessionId });
+
+    // Clear the cart items from local storage after successful order placement
     clearCartItemsFromLocalStorage(auth0SessionId);
 
     res.status(200).json({ message: 'Checkout successful!' });
@@ -146,42 +123,65 @@ router.post('/checkout', async (req, res) => {
   }
 });
 
-async function sendToDiscordWebhook(cartItems, auth0SessionId, userEmail) {
+// Add a new function to save cart items to a JSON file
+async function saveCartItemsToJson({ cartItems, auth0SessionId }) {
   try {
-    // Check if cartItems is an array and not empty
-    if (Array.isArray(cartItems) && cartItems.length > 0) {
-      const totalPrice = cartItems.reduce((total, item) => total + (item.price || 0) * (item.quantity || 1), 0);
-
-      const webhookData = {
-        content: `New Checkout!\nAuth0 Session ID: ${auth0SessionId}\nUser Email: ${userEmail}\nTotal Price: $${totalPrice.toFixed(2)}`,
-        embeds: [
-          {
-            title: 'Cart Items',
-            fields: cartItems.map((item, index) => ({
-              name: `Item ${index + 1}`,
-              value: `Name: ${item.name}\nPrice: $${item.price}\nQuantity: ${item.quantity}\n`,
-            })),
-          },
-        ],
-      };
-
-      // Make HTTP POST request to Discord webhook
-      await axios.post(process.env.DISCORD_WEBHOOK_URL, webhookData);
-    } else {
-      console.error('Error sending to Discord webhook: Invalid or empty cartItems array.');
-      // Optionally log or handle the case when cartItems is empty
+    // Check if cartItems is defined and not empty
+    if (!cartItems || cartItems.length === 0) {
+      throw new Error('No cart items to save.');
     }
+
+    const orderId = Date.now().toString();
+    const orderFilePath = path.join(__dirname, 'orders', `order_${orderId}.json`);
+
+    // Save the cart items to the JSON file
+    await fs.writeFile(orderFilePath, JSON.stringify({ cartItems, auth0SessionId }, null, 2));
+
+    console.log(`Cart items saved to ${orderFilePath}`);
   } catch (error) {
-    console.error('Error sending to Discord webhook:', error.message);
+    console.error('Error saving cart items to JSON:', error.message);
+    throw error;
   }
 }
 
+// Change this line in the checkout route
+
+// Update the saveOrderToJSON function to accept an object
+async function saveOrderToJSON({ cartItems, auth0SessionId }) {
+  try {
+    // Check if cartItems is defined and not empty
+    if (!cartItems || cartItems.length === 0) {
+      throw new Error('No cart items to save in the order.');
+    }
+
+
+    const orderId = Date.now().toString();
+    const orderFilePath = path.join(__dirname, 'orders', `order_${orderId}.json`);
+
+    // Save the order to the JSON file
+    await fs.writeFile(orderFilePath, JSON.stringify({ cartItems, auth0SessionId }, null, 2));
+
+    // Clear the cart items from local storage after successful order placement
+    clearCartItemsFromLocalStorage(auth0SessionId);
+  } catch (error) {
+    console.error('Error saving order to JSON:', error.message);
+    throw error;
+  }
+}
+
+
+
 function getCartItemsFromLocalStorage(auth0SessionId) {
-  return JSON.parse(localStorage.getItem(`cartItems_${auth0SessionId}`)) || [];
-}
+  try {
+    const cartItemsDataRaw = localStorage.getItem(`cartItems_${auth0SessionId}`);
+    const cartItemsData = cartItemsDataRaw ? JSON.parse(cartItemsDataRaw) : [];
+    
+    debugger; // Add this line to pause execution and inspect variables
 
-function clearCartItemsFromLocalStorage(auth0SessionId) {
-  localStorage.removeItem(`cartItems_${auth0SessionId}`);
+    return cartItemsData;
+  } catch (error) {
+    console.error('Error retrieving cart items from local storage:', error.message);
+    return [];
+  }
 }
-
 module.exports = router;

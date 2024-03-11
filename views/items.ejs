@@ -12,10 +12,15 @@
         <h2><%= item.name %></h2>
         <br>
         <p style="    -webkit-text-stroke-width: 0.01px;    color:#007bff;    ">Price: $<%= item.price %></p>
-        <!-- Add to Cart button with data attributes -->
-        <button onclick="addToCart('<%= item.name %>', '<%= item.price %>', '<%= item.image %>')" style="color:rgb(0, 0, 0); background-color: rgb(255, 255, 255); -webkit-text-stroke-width: 0.0px; padding: 10px; font-weight: bold; box-shadow: 0 0 10px rgb(0, 0, 0);" class="add-to-cart" data-name="<%= item.name %>" data-price="<%= item.price %>" data-image="<%= item.image %>">
-          Add to Cart
-        </button>
+        <!-- Updated Add to Cart form -->
+        <form class="addToCartForm">
+          <input type="hidden" name="name" value="<%= item.name %>">
+          <input type="hidden" name="price" value="<%= item.price %>">
+          <input type="hidden" name="image" value="<%= item.image %>">
+          <button type="button" onclick="addToCart()" class="add-to-cart">
+            Add to Cart
+          </button>
+        </form>
       </div>
     </div>
   <% }); %>
@@ -23,8 +28,6 @@
 
 <%- include('partials/style') -%>
 <%- include('partials/footer') -%>
-
-
 
 <style>
   /* Paste the provided CSS styles here */
@@ -82,35 +85,63 @@
 </style>
 
 <script>
-  function addToCart(name, price, image) {
-    const item = {
-      name: name,
-      price: price,
-      image: image
-    };
+  document.addEventListener('DOMContentLoaded', function () {
+    // Add click event listener to each Add to Cart button
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+    addToCartButtons.forEach(button => {
+      button.addEventListener('click', addToCart);
+    });
 
-    // Get Auth0 session ID
-    const auth0SessionId = '<%= user.sid %>';
+    // Function to handle Add to Cart button click
+    async function addToCart(event) {
+      const form = event.target.closest('form');
+      const formData = new FormData(form);
+      const itemName = formData.get('name');
 
-    // Get existing cart items from local storage using Auth0 session ID
-    let cartItems = JSON.parse(localStorage.getItem(`cartItems_${auth0SessionId}`)) || [];
+      // Send the form data to the server
+      try {
+        const response = await fetch('/addToCart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(Object.fromEntries(formData)),
+        });
 
-    // Check if the item is already in the cart
-    const existingItemIndex = cartItems.findIndex(i => i.name === item.name);
+        if (response.ok) {
+          const result = await response.json();
 
-    if (existingItemIndex !== -1) {
-      // If the item is already in the cart, increase the quantity
-      cartItems[existingItemIndex].quantity += 1;
-    } else {
-      // If the item is not in the cart, add it with a quantity of 1
-      item.quantity = 1;
-      cartItems.push(item);
+          // Check if the item is already in the cart
+          const existingCartItem = document.querySelector(`.cart-item[data-name="${itemName}"]`);
+
+          if (existingCartItem) {
+            // If item already exists, increase the quantity
+            const quantityElement = existingCartItem.querySelector('.quantity-value');
+            const newQuantity = parseInt(quantityElement.textContent, 10) + 1;
+            quantityElement.textContent = newQuantity;
+          } else {
+            // If item is not in the cart, add a new cart item
+            const cartContainer = document.getElementById('cart-container');
+            const newCartItem = document.createElement('li');
+            newCartItem.className = 'cart-item';
+            newCartItem.setAttribute('data-name', itemName);
+            newCartItem.innerHTML = `
+              <div class="product-details">
+                <h2>${itemName}</h2>
+                <p class="price">Price: $${formData.get('price')}</p>
+                <p class="quantity">Quantity: <span class="quantity-value">1</span></p>
+              </div>
+            `;
+            cartContainer.appendChild(newCartItem);
+          }
+
+          alert(result.message);
+        } else {
+          console.error('Failed to add item to cart');
+        }
+      } catch (error) {
+        console.error('Error adding item to cart:', error);
+      }
     }
-
-    // Update local storage with the updated cart using Auth0 session ID
-    localStorage.setItem(`cartItems_${auth0SessionId}`, JSON.stringify(cartItems));
-
-    // Alert the user about the successful addition
-    alert('Item successfully added to the cart!');
-  }
+  });
 </script>

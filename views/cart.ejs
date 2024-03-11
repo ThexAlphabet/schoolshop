@@ -1,15 +1,9 @@
 
-
-<!-- Your Cart Page (cart.ejs) -->
 <%- include('partials/top') -%>
 <title>Cart | SchoolShop</title>
 
-
 <style>
-  /* Pa
-  
-  
-  ste the provided CSS styles here */
+  /* Paste the provided CSS styles here */
 
   .total-price {
     margin-top: 20px;
@@ -17,8 +11,8 @@
     font-weight: bold;
   }
 
-   /* Center the button */
-   #cart-container button {
+  /* Center the button */
+  #cart-container button {
     margin: 20px auto;
     display: block;
   }
@@ -42,7 +36,7 @@
 
   .cart-item {
     width: 30%; /* Adjust width as needed */
-    color:black;
+    color: black;
     background-color: #fff;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
     border-radius: 5px;
@@ -87,10 +81,73 @@
 
 <%- include('partials/style') -%>
 
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    fetchCartItems();
+  });
+
+  async function fetchCartItems() {
+    try {
+      const response = await fetch('/cart');
+      const data = await response.json();
+      displayCartItems(data.cartItems);
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+    }
+  }
+
+  function displayCartItems(cartItems) {
+    const cartList = document.getElementById('cart-list');
+    cartList.innerHTML = '';
+
+    if (cartItems.length > 0) {
+      cartItems.forEach(item => {
+        const cartItem = document.createElement('li');
+        cartItem.classList.add('cart-item');
+
+        cartItem.innerHTML = `
+          <div class="product-details">
+            <p><strong>${item.name}</strong></p>
+            <p>Price: $${item.price}</p>
+            <p>Quantity: ${item.quantity}</p>
+          </div>
+        `;
+
+        cartList.appendChild(cartItem);
+      });
+    } else {
+      const emptyCartMessage = document.createElement('p');
+      emptyCartMessage.classList.add('cart-empty');
+      emptyCartMessage.textContent = 'Your cart is empty.';
+      cartList.appendChild(emptyCartMessage);
+    }
+  }
+</script>
+<div id="cart-container">
+  <ul class="cart-list" id="cart-list">
+    <% if (cartItems.length > 0) { %>
+      <% cartItems.forEach((item, index) => { %>
+        <li class="cart-item">
+          <div class="product-details">
+            <p><strong><%= item.name %></strong></p>
+            <p>Price: $<%= item.price %></p>
+            <p>Quantity: <%= item.quantity %></p>
+            <button onclick="removeItem('<%= item.name %>')">Remove One</button>
+          </div>
+        </li>
+      <% }); %>
+    <% } else { %>
+      <p class="cart-empty">Your cart is empty.</p>
+    <% } %>
+  </ul>
+</div>
+
+
 <h1>Your Cart</h1>
-<div style="right: 50%; font-weight: bold; text-align: center;" id="total-price"></div>
+<div id="total-price" class="total-price"></div>
 <br>
-<div style="text-align: center;" id="btn1">
+<div id="btn1" style="text-align: center;">
   <form id="checkoutForm" action="/checkout" method="post">
     <input type="hidden" name="auth0SessionId" value="<%= user.sid %>">
     <input type="hidden" name="userEmail" value="<%= user.email %>">
@@ -101,14 +158,11 @@
       <input type="hidden" name="cartItems[<%= i %>][image]" value="<%= cartItems[i].image %>">
       <input type="hidden" name="cartItems[<%= i %>][quantity]" value="<%= cartItems[i].quantity %>">
     <% } %>
-    <button style="background-color: greenyellow; border-radius: 5px; text-align: center; align-items: center; font-weight: bold; color: black; left: 50px;" type="submit">Proceed to Checkout</button>
+    <button type="submit" style="background-color: greenyellow; border-radius: 5px; text-align: center; align-items: center; font-weight: bold; color: black; margin-top: 20px;">Proceed to Checkout</button>
   </form>
 </div>
-<div id="cart-container">
-  <ul class="cart-list" id="cart-list">
-    <!-- Cart items will be dynamically added here -->
-  </ul>
-</div>
+
+
 
 <%- include('partials/footer') -%>
 
@@ -170,14 +224,14 @@
       userEmail,
       cartItems
     })
-    .then(response => {
-      alert('Checkout successful!');
-      // Additional client-side logic if needed
-    })
-    .catch(error => {
-      console.error('Error during checkout:', error.message);
-      // Additional error handling if needed
-    });
+      .then(response => {
+        alert('Checkout successful!');
+        // Additional client-side logic if needed
+      })
+      .catch(error => {
+        console.error('Error during checkout:', error.message);
+        // Additional error handling if needed
+      });
   }
 
   function updateButtonVisibility() {
@@ -188,7 +242,7 @@
     checkoutButton.style.display = cartItems.length > 0 ? 'block' : 'none';
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     renderCartItems();
     updateButtonVisibility();
   });
@@ -234,6 +288,7 @@
     const totalPriceElement = document.getElementById('total-price');
     const buttonElement = document.getElementById('btn1');
 
+    // Clear the existing content in the cartList
     cartList.innerHTML = '';
 
     if (cartItems.length > 0) {
@@ -246,7 +301,6 @@
         totalPrice += item.price * item.quantity;
 
         cartItem.innerHTML = `
-          <img src="${item.image}" alt="${item.name}" class="product-image">
           <div class="product-details">
             <p><strong>${item.name}</strong></p>
             <p>Price: $${item.price}</p>
@@ -267,8 +321,8 @@
       cartList.appendChild(emptyCartMessage);
 
       // Hide the total price when the cart is empty
-      totalPriceElement.textContent = '';
-      buttonElement.textContent = '';
+     
     }
   }
+
 </script>
