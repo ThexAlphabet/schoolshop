@@ -41,38 +41,52 @@ router.post('/auth/get', async (req, res) => {
   }
 });
 
-router.get('/items', requiresAuth(), (req, res) => {
-  const items = [
-    { name: 'Arizona Ice Tea', price: 2, image: 'https://www.dollartree.com/ccstore/v1/images/?source=/file/v2989681447849503788/products/284226.jpg' },
-    { name: 'Hand Gripper', price: 7, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/933c1c62ffbe97aea79e381f8aff701e.jpg?imageView2/2/w/800/q/70/format/webp' },
-    { name: 'Sour Patch', price: 2, image: 'https://i5.walmartimages.com/seo/SOUR-PATCH-KIDS-Original-Soft-Chewy-Candy-Valentine-Candy-3-5-oz-Box_88eab23e-ad94-4604-8f52-1229e97a9436.5b52785d32431171e597ab744f504c9d.jpeg?odnHeight=640&odnWidth=640&odnBg=FFFFFF: ' },
-    { name: 'Hair Styling Powder', price: 8 , image: 'https://img.kwcdn.com/product/fancy/4af8433c-7284-411a-8726-c3edac84141b.jpg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Push Game', price: 6, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/66e7b2461c9a5648670c7866109c40e7.jpg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Islam Bracelet', price: 5, image: 'https://img.kwcdn.com/product/open/2023-07-05/1688549279984-d8c754e730574f39921ebffef77bfe33-goods.jpeg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Cross Bracelet', price: 5,image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/bb2e51ea7e894c5ff701ae738eb668a4.jpg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Pink Unbreakable Pencil', price: 4, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/0f8c5104fefed0060ba0fd9da49902b8.jpg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Blue Unbreakable Pencil', price: 4, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/03804453f960a3257a137bf8f46b89fd.jpg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Black and White Beanie', price: 5, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/6b7affb1104d029202660dfc659f6e37.jpg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Black and Red Beanie', price: 5, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/f39c8dc85167a84dac3d9b8e985663e6.jpg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Rings', price: 1,image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/d663dd745cc1fe15a7c211771d8bf19b.jpg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Rubber Band Gun', price: 5, image: 'https://img.kwcdn.com/product/open/2023-03-22/1679482441399-deb172f9491d41fdbccd1e9c70e6820f-goods.jpeg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Monkey', price: 10, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/5d372bce49a73b3963c1027e543cb263.jpg?imageView2/2/w/800/q/70/format/webp: ' },
-    { name: 'Car Stickers 10 for 2$', price: 2, image: 'https://img.kwcdn.com/product/open/2023-11-13/1699861590301-19b32e97d85d4dba91372946bbfa4051-goods.jpeg?imageView2/2/w/800/q/70/format/webp: ' },  
- // add more if needed
-  ];
-  res.render('items', {
-    userProfile: JSON.stringify(req.oidc.user, null, 2),
-    title: 'Cart | SchoolShop',
-    items: items,
+  router.get('/items', requiresAuth(), (req, res) => {
+    const items = [
+      { id: 1, name: 'Arizona Ice Tea', price: 2, image: 'https://www.dollartree.com/ccstore/v1/images/?source=/file/v2989681447849503788/products/284226.jpg' },
+      { id: 2, name: 'Hand Gripper', price: 7, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/933c1c62ffbe97aea79e381f8aff701e.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 3, name: 'Sour Patch', price: 2, image: 'https://i5.walmartimages.com/seo/SOUR-PATCH-KIDS-Original-Soft-Chewy-Candy-Valentine-Candy-3-5-oz-Box_88eab23e-ad94-4604-8f52-1229e97a9436.5b52785d32431171e597ab744f504c9d.jpeg?odnHeight=640&odnWidth=640&odnBg=FFFFFF' },
+      { id: 4, name: 'Hair Styling Powder', price: 8, image: 'https://img.kwcdn.com/product/fancy/4af8433c-7284-411a-8726-c3edac84141b.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 5, name: 'Push Game', price: 6, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/66e7b2461c9a5648670c7866109c40e7.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 6, name: 'Islam Bracelet', price: 5, image: 'https://img.kwcdn.com/product/open/2023-07-05/1688549279984-d8c754e730574f39921ebffef77bfe33-goods.jpeg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 7, name: 'Cross Bracelet', price: 5, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/bb2e51ea7e894c5ff701ae738eb668a4.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 8, name: 'Pink Unbreakable Pencil', price: 4, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/0f8c5104fefed0060ba0fd9da49902b8.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 9, name: 'Blue Unbreakable Pencil', price: 4, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/03804453f960a3257a137bf8f46b89fd.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 10, name: 'Black and White Beanie', price: 5, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/6b7affb1104d029202660dfc659f6e37.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 11, name: 'Black and Red Beanie', price: 5, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/f39c8dc85167a84dac3d9b8e985663e6.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 12, name: 'Rings', price: 1, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/d663dd745cc1fe15a7c211771d8bf19b.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 13, name: 'Rubber Band Gun', price: 5, image: 'https://img.kwcdn.com/product/open/2023-03-22/1679482441399-deb172f9491d41fdbccd1e9c70e6820f-goods.jpeg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 14, name: 'Monkey', price: 10, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/5d372bce49a73b3963c1027e543cb263.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 15, name: 'Car Stickers 10 for 2$', price: 2, image: 'https://img.kwcdn.com/product/open/2023-11-13/1699861590301-19b32e97d85d4dba91372946bbfa4051-goods.jpeg?imageView2/2/w/800/q/70/format/webp' },  
+      { id: 16, name: 'Islam neckless', price: 5, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/61c0382e4870bf6a21b2d565ee07033c.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 17, name: 'Couple braclet', price: 5, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/8b7720f7ddc99a6213be2f9f2e339091.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 18, name: 'Soccer stickers 10 for 2$', price: 2, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/afc3df71d138ae595f7525e5ca4ab7ba.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 19, name: 'Ring Pop', price: 1, image: 'https://m.media-amazon.com/images/I/81HGT4lN1ML._SX679_.jpg' },
+      { id: 20, name: 'Pink Beanie ', price: 5, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/6bcfa2236069296e97973d1190a8bc6b.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 21, name: 'Humidifier ', price: 15, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/30e5ef7ce5874ff0445fe571db5b5162.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 22, name: 'Black and Red Beanie ', price: 5, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/e265d80aa85b9592b331ce4dab99235a.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 23, name: 'Blue Beanie ', price: 5, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/627539e5e5c4b82b852347fbb13a44e3.jpg?imageView2/2/w/800/q/70/format/webp' },
+      { id: 24, name: 'black and white Beanie ', price: 5, image: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/ec0ce7dc6065c2e51ec1122bf635f2e9.jpg?imageView2/2/w/800/q/70/format/webp' },
+      // Add more items with IDs as needed
+    ];
+  
+    res.render('items', {
+      userProfile: JSON.stringify(req.oidc.user, null, 2),
+      title: 'Cart | SchoolShop',
+      items: items,
+    });
   });
-});
+  
 
-router.get('/order', requiresAuth(), function (req, res, next) {
-  res.render('order', {
-    userProfile: JSON.stringify(req.oidc.user, null, 2),
-    title: 'Order | SchoolShop',
-  });
-});
+// ...
+
+
+
+
+
+// ...
+
+
 
 // routes.js
 
@@ -83,45 +97,11 @@ router.get('/order', requiresAuth(), function (req, res, next) {
 // ...
 
 
-router.get('/api/cart', requiresAuth(), async (req, res) => {
-  try {
-    const auth0SessionId = req.oidc.user.sub;
-
-    // Fetch cart items from the database
-    const cartItems = await fetchCartItemsFromDatabase(auth0SessionId);
-
-    res.status(200).json({ cartItems });
-  } catch (error) {
-    console.error('Error fetching cart items from the database:', error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
 
 
 
-router.post('/checkout', async (req, res) => {
-  try {
-    const auth0SessionId = req.oidc.user.sub;
-    const userEmail = req.oidc.user.email;
-    const cartItems = getCartItemsFromLocalStorage(auth0SessionId);
 
-    // Check if there are cart items to process
-    if (!cartItems || cartItems.length === 0) {
-      return res.status(400).json({ error: 'No items in the cart' });
-    }
 
-    // Save cart items to a JSON file
-    await saveCartItemsToJson({ cartItems, auth0SessionId });
-
-    // Clear the cart items from local storage after successful order placement
-    clearCartItemsFromLocalStorage(auth0SessionId);
-
-    res.status(200).json({ message: 'Checkout successful!' });
-  } catch (error) {
-    console.error('Error during checkout:', error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
 
 // Add a new function to save cart items to a JSON file
 async function saveCartItemsToJson({ cartItems, auth0SessionId }) {
@@ -184,4 +164,17 @@ function getCartItemsFromLocalStorage(auth0SessionId) {
     return [];
   }
 }
+
+
+
+router.get('/success', function (req, res, next) {
+  res.render('done', {
+    title: 'Done | SchoolShop',
+    userProfile: JSON.stringify(req.oidc.user, null, 2),
+    isAuthenticated: req.oidc.isAuthenticated(),
+    cartItems: req.session.cartItems || [],
+  });
+});
+
+
 module.exports = router;

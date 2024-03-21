@@ -11,8 +11,12 @@ const { auth } = require('express-openid-connect');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const session = require('express-session');
-const { sendToDiscordWebhook } = require('./utils'); // Replace with the correct path to your utils file
-
+const { sendToDiscordWebhook } = require('./utils');
+const { Client, Intents } = require('discord.js');
+const Discord = require('discord.js')
+const nodemailer = require('nodemailer');
+const axios = require('axios'); // Import axios module
+import ('./checkout.js')
 dotenv.config();
 
 const app = express();
@@ -20,13 +24,14 @@ const server = http.createServer(app);
 const io = socketIO(server);
 
 app.use(session({
-  secret: 'smsmsmdq91930193039mxjsiwju29', // Replace with a secret key for session encryption
+  secret: 'smsmsmdq91930193039mxjsiwju29',
   resave: false,
   saveUninitialized: true,
 }));
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+app.use(express.urlencoded({ extended: true }));
 
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -37,10 +42,10 @@ const config = {
   auth0Logout: true,
 };
 
-const port = process.env.PORT || 3000;
+const discordWebhookUrl = 'https://discord.com/api/webhooks/1218586890819600384/IxOEsuiv77Qg78i7wu23y70QB8FwklkCY6kSNXcF5HHwVxtD_SQE57iiwlV_8C6SsIHk';
 
 if (!config.baseURL && !process.env.BASE_URL && process.env.PORT && process.env.NODE_ENV !== 'production') {
-  config.baseURL = `https://effective-palm-tree-97675rx4xjrwh9576-3000.app.github.dev/`;
+  config.baseURL = `https://psychic-fishstick-97675rx4xjjjhx7p5-3000.app.github.dev/`;
 }
 
 app.use(auth(config));
@@ -60,60 +65,31 @@ const userSchema = new Schema({
   email: { type: String, required: true },
   nickname: { type: String, required: true },
   bio: { type: String, default: '' },
-  cart: { type: Array, default: [] }, // Use Array type for cart
+  cart: { type: Array, default: [] },
 });
 
 const User = mongoose.model('User', userSchema);
 
-
-// Define the createOrUpdateUser function
-async function createOrUpdateUser(sid, email, nickname) {
-  try {
-    const existingUser = await User.findOne({ sid });
-    if (existingUser) {
-      console.log(`User with SID ${sid} already exists`);
-      return existingUser; // Return the existing user
-    }
-
-    const newUser = new User({ sid, email, nickname });
-    await newUser.save();
-    console.log(`User with SID ${sid} created successfully`);
-    return newUser; // Return the newly created user
-  } catch (err) {
-    console.error(err);
-    throw err; // Propagate the error
-  }
-}
-
-// Middleware to run createOrUpdateUser on every request
 app.use(async (req, res, next) => {
-  // Check if the user is authenticated (you may adjust this based on your authentication logic)
   if (req.oidc.isAuthenticated()) {
     const auth0SessionId = req.oidc.user.sub;
     const userEmail = req.oidc.user.email;
     const userNickname = req.oidc.user.nickname;
 
-    // Call the createOrUpdateUser function
     await createOrUpdateUser(auth0SessionId, userEmail, userNickname);
   }
 
-  // Continue to the next middleware or route handler
   next();
 });
 
-// Mount the router at the root path
 app.use('/', router);
 
-
-// Add the /addToCart route
-// Add the /addToCart route
 app.post('/addToCart', async (req, res) => {
   try {
     const auth0SessionId = req.oidc.user.sub;
 
-    console.log('Auth0 Session ID:', auth0SessionId);
-
     const item = {
+      id: req.body.id,
       name: req.body.name,
       price: req.body.price,
       image: req.body.image,
@@ -121,30 +97,24 @@ app.post('/addToCart', async (req, res) => {
 
     const user = await User.findOne({ sid: auth0SessionId });
 
-    // Check if the user exists
     if (!user) {
       console.error('User not found in MongoDB');
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Check if the item is already in the cart
-    const existingItemIndex = user.cart.findIndex(i => i.name === item.name);
+    const existingItemIndex = user.cart.findIndex(i => i.id === item.id);
 
     if (existingItemIndex !== -1) {
-      // If the item is already in the cart, increase the quantity
       user.cart[existingItemIndex].quantity += 1;
     } else {
-      // If the item is not in the cart, add it with a quantity of 1
       item.quantity = 1;
       user.cart.push(item);
     }
 
-    // Save the updated user document
     await user.save();
 
     console.log('Item added to cart:', item);
 
-    // Alert the user about the successful addition
     res.status(200).json({ message: 'Item successfully added to the cart!' });
   } catch (error) {
     console.error('Error adding item to cart:', error);
@@ -152,12 +122,12 @@ app.post('/addToCart', async (req, res) => {
   }
 });
 
-
-app.get('/cart', async function (req, res, next) {
+// Add a new route handler to handle removing an item
+app.get('/removeFromCart', async (req, res) => {
   try {
     const auth0SessionId = req.oidc.user.sub;
+    const itemId = req.query.itemId;
 
-    // Fetch cart items from the database
     const user = await User.findOne({ sid: auth0SessionId });
 
     if (!user) {
@@ -165,12 +135,22 @@ app.get('/cart', async function (req, res, next) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const cartItems = user.cart || [];
+    const itemIndex = user.cart.findIndex(item => item.id === itemId);
 
-    // Send the cart items as a JSON object to the client-side
-    res.status(200).json({ cartItems });
+    if (itemIndex === -1) {
+      console.error('Item not found in cart');
+      return res.status(404).json({ error: 'Item not found in cart' });
+    }
+
+    user.cart.splice(itemIndex, 1);
+
+    await user.save();
+
+    console.log('Item removed from cart with ID:', itemId);
+    res.redirect('/cart')
+
   } catch (error) {
-    console.error('Error fetching cart items from the database:', error.message);
+    console.error('Error removing item from cart:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -179,9 +159,7 @@ app.get('/cart', async function (req, res, next) {
 io.on('connection', (socket) => {
   console.log('A user connected');
 
-  // Listen for cart updates from clients
   socket.on('updateCart', (data) => {
-    // Broadcast the updated cart to all connected clients
     io.emit('cartUpdated', data);
   });
 
@@ -191,6 +169,286 @@ io.on('connection', (socket) => {
 });
 
 http.createServer(app)
-  .listen(port, () => {
-    console.log(`Server online on port ${port}!`);
+  .listen(3000, () => {
+    console.log(`Server online!`);
   });
+
+async function createOrUpdateUser(sid, email, nickname) {
+  try {
+    const existingUser = await User.findOne({ sid });
+    if (existingUser) {
+      console.log(`User with SID ${sid} already exists`);
+      return existingUser;
+    }
+
+    const newUser = new User({ sid, email, nickname });
+    await newUser.save();
+    console.log(`User with SID ${sid} created successfully`);
+    return newUser;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+
+// Define the route handler for the POST request to /send-email
+app.post('/send-email', async (req, res) => {
+  try {
+    const { name, items } = req.body; // Retrieve name and items from request body
+
+    // Create a transporter object for sending emails
+    const transporter = nodemailer.createTransport({
+      // Configure the transporter (replace with your email service provider)
+      service: 'gmail',
+      auth: {
+        user: 'your-email@gmail.com', // Replace with your email address
+        pass: 'your-email-password', // Replace with your email password
+      },
+    });
+
+    // Construct the email message
+    const mailOptions = {
+      from: 'your-email@gmail.com', // Sender address (replace with your email address)
+      to: 'recipient@example.com', // Receiver address (replace with recipient's email address)
+      subject: 'New Order Received',
+      text: `Name: ${name}\n\nOrder Details:\n${JSON.stringify(items, null, 2)}`,
+    };
+
+    // Send the email
+    await transporter.sendMail(mailOptions);
+
+    console.log('Email sent successfully');
+    res.status(200).json({ message: 'Email sent successfully' });
+  } catch (error) {
+    console.error('Error sending email:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+// Handle the checkout form submission
+// Handle the checkout request
+
+
+
+// Function to send order details to Discord webhook
+async function sendOrderToDiscordWebhook({ name, items }) {
+  try {
+    // Construct the message payload for the Discord webhook
+    const payload = {
+      username: 'Order Bot',
+      avatar_url: 'YOUR_AVATAR_URL_HERE', // Replace with your avatar URL
+      content: `New order received from ${name}!\n\nOrder Details:\n`,
+      embeds: [{
+        title: 'Order Details',
+        color: 0x00ff00,
+        fields: items.map(item => ({
+          name: item.name,
+          value: `Price: $${item.price.toFixed(2)}\nQuantity: ${item.quantity}`,
+          inline: true,
+        })),
+      }],
+    };
+
+    // Send the payload to the Discord webhook URL
+    await axios.post('YOUR_DISCORD_WEBHOOK_URL_HERE', payload); // Replace with your Discord webhook URL
+
+    console.log('Order details sent to Discord webhook successfully');
+  } catch (error) {
+    console.error('Error sending order details to Discord webhook:', error.message);
+    throw error;
+  }
+}
+
+
+
+// Define the route handler for the POST request to /checkout
+
+
+// Define the route handler for the POST request to /checkout
+// Define the route handler for the POST request to /checkout
+
+async function saveOrderToDatabase({ auth0SessionId, userEmail, userName, cartItems }) {
+  try {
+    // Find or create the user document based on the auth0SessionId
+    let user = await User.findOne({ sid: auth0SessionId });
+    if (!user) {
+      // If the user doesn't exist, create a new user document
+      user = new User({ sid: auth0SessionId, email: userEmail, nickname: userName, orders: [] });
+      await user.save(); // Save the new user document to the database
+    }
+
+    // Create a new order object
+    const order = {
+      name: userName,
+      email: userEmail,
+      items: cartItems,
+    };
+
+    // Push the new order to the user's orders array
+    user.orders.push(order);
+
+    // Save the user document
+    await user.save();
+
+    console.log('Order saved to database successfully');
+  } catch (error) {
+    console.error('Error saving order to database:', error.message);
+    throw error;
+  }
+}
+
+
+
+
+// Handle requests to view orders
+app.get('/orders', async (req, res) => {
+  try {
+    // Fetch orders for the authenticated user from the database
+    const auth0SessionId = req.oidc.user.sub;
+    const user = await User.findOne({ sid: auth0SessionId });
+
+    if (!user) {
+      console.error('User not found in MongoDB');
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Render the orders page and pass the orders data to the template
+    res.render('orders', { orders: user.orders });
+  } catch (error) {
+    console.error('Error fetching orders:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+app.get('/api/cart', async function (req, res, next) {
+  try {
+    const auth0SessionId = req.oidc.user.sub;
+
+    const user = await User.findOne({ sid: auth0SessionId });
+
+    if (!user) {
+      console.error('User not found in MongoDB');
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const cartItems = user.cart || [];
+
+    const itemsWithId = cartItems.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      quantity: item.quantity
+    }));
+
+    const totalPrice = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+
+    res.status(200).json({ items: itemsWithId, totalPrice });
+  } catch (error) {
+    console.error('Error fetching cart items from the database:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+
+function formatOrderForDiscord(user, cartItems) {
+  // Assuming you have a specific format for your order message
+  // You can customize this function based on your requirements
+  let message = `New order from ${user.name} (${user.email}): \n`;
+  cartItems.forEach(item => {
+    message += `- ${item.name}: ${item.quantity} \n`;
+  });
+  return message;
+}
+
+
+
+
+app.get('/cart', async function (req, res, next) {
+  try {
+    const auth0SessionId = req.oidc.user.sub;
+
+    const user = await User.findOne({ sid: auth0SessionId });
+
+    if (!user) {
+      console.error('User not found in MongoDB');
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const cartItems = user.cart || [];
+
+    res.render('cart', { cartItems });
+  } catch (error) {
+    console.error('Error fetching cart items from the database:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Assume you have an Express route handler
+app.get('/checkout', (req, res) => {
+  // Render an HTML form with input fields for name and class
+  res.render('checkout', { errorMessage: null });
+});
+
+// Assume you have another route to handle the form submission
+
+// Assume you have the sendOrderToDiscordWebhook function defined
+
+app.post('/submit-order', async (req, res) => {
+  try {
+    const auth0SessionId = req.oidc.user.sub;
+    const auth0Email = req.oidc.user.email;
+    const auth0Nickname = req.oidc.user.nickname;
+
+
+
+    const user = await User.findOne({ sid: auth0SessionId });
+
+    if (!user) {
+      console.error('User not found in MongoDB');
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const cartItems = user.cart || [];
+
+    // Check if there are cart items
+    if (cartItems.length === 0) {
+      console.error('No cart items found for the user');
+      return res.status(400).json({ error: 'No cart items found' });
+    }
+
+    const { name, userClass } = req.body;
+
+    const orderMessage = {
+      username: 'Order Bot',
+      content: `@everyone New order received from **${name}** in class **${userClass}** ||with ID ${auth0SessionId}||. **Email: ${auth0Email} and Nickname: ${auth0Nickname}**. \n\nOrder Details:\n`,
+      embeds: [{
+        title: 'Order Details',
+        color: 0x00ff00,
+        fields: cartItems.map(item => ({
+          name: item.name, 
+          value: `Price: $${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}\nQuantity: ${item.quantity}`,
+          inline: true,
+        })),
+      }],
+    };
+
+    // Replace 'YOUR_DISCORD_WEBHOOK_URL_HERE' with your actual Discord webhook URL
+    await axios.post('https://discord.com/api/webhooks/1218586890819600384/IxOEsuiv77Qg78i7wu23y70QB8FwklkCY6kSNXcF5HHwVxtD_SQE57iiwlV_8C6SsIHk', orderMessage);
+
+    // Clear user's cart
+    user.cart = [];
+    await user.save();
+
+    console.log('Order details sent to Discord webhook successfully');
+    res.redirect('/success');
+  } catch (error) {
+    console.error('Error processing order:', error.message);
+    res.redirect('/checkout')
+  }
+});

@@ -1,7 +1,6 @@
 <!-- Your Products Page (items.ejs) -->
 <%- include('partials/top') -%>
-
-<h1 style="color: #ffffff; font-weight: bold; text-align: center;">All Products!</h1>
+  <h1 style="color: #ffffff; font-weight: bold; text-align: center;">All Products!</h1>
 <div class="product-container">
   <% items.forEach(item => { %>
     <div class="product">
@@ -14,16 +13,27 @@
         <p style="    -webkit-text-stroke-width: 0.01px;    color:#007bff;    ">Price: $<%= item.price %></p>
         <!-- Updated Add to Cart form -->
         <form class="addToCartForm">
+          <input type="hidden" name="id" value="<%= item.id %>">
           <input type="hidden" name="name" value="<%= item.name %>">
           <input type="hidden" name="price" value="<%= item.price %>">
           <input type="hidden" name="image" value="<%= item.image %>">
+          <% if (user.email_verified) { %>
+
           <button type="button" onclick="addToCart()" class="add-to-cart">
             Add to Cart
           </button>
+          <% } else { %>
+<p>Verify email!</P>
+  <p>Check your email and spam folder if still can't be found tell Abdel!</P>
+    <p>When your verified, <a href="/logout" style="color: red;">LOGOUT</a> then log back in!</p>
+    <% } %>
+
+
         </form>
       </div>
     </div>
-  <% }); %>
+    <% }); %>
+
 </div>
 
 <%- include('partials/style') -%>

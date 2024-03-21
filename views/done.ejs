@@ -1,0 +1,28 @@
+<%- include('partials/top') -%>
+<%- include('partials/style') -%>
+
+<style>
+  .success-message {
+    text-align: center;
+    margin-top: 50px;
+  }
+</style>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Success</title>
+</head>
+<body>
+  <div class="success-message">
+    <h2 style="text-align: center;">Your order has been placed successfully!</h2>
+    <p style="text-align: center;">Thank you for your purchase. We will contact you IRL soon.</p>
+    <p style="text-align: center; color: green;">Thank you, <%= user.nickname %>!</p>
+  </div>
+  <br><br><br><br><br><br><br><br><br><br><br><br><br>
+</body>
+</html>
+
+<%- include('partials/footer') -%>
